@@ -50,7 +50,7 @@ var gceProductNameFile = "/sys/class/dmi/id/product_name"
 
 // For these urls, the parts of the host name can be glob, for example '*.gcr.io" will match
 // "foo.gcr.io" and "bar.gcr.io".
-var containerRegistryUrls = []string{"container.cloud.google.com", "gcr.io", "*.gcr.io", "*.pkg.dev"}
+var containerRegistryUrls = []string{"container.cloud.google.com", "gcr.io", "*.gcr.io", "*-docker.pkg.dev"}
 
 var metadataHeader = &http.Header{
 	"Metadata-Flavor": []string{"Google"},
@@ -210,8 +210,6 @@ func runWithBackoff(f func() ([]byte, error)) []byte {
 // More information on metadata service can be found here - https://cloud.google.com/compute/docs/storing-retrieving-metadata
 func (g *containerRegistryProvider) Enabled() bool {
 	if !onGCEVM() {
-		//TODO: delete
-		klog.Error("containerRegistryProvider is disabled 1")
 		return false
 	}
 	// Given that we are on GCE, we should keep retrying until the metadata server responds.
@@ -235,8 +233,6 @@ func (g *containerRegistryProvider) Enabled() bool {
 	}
 	if !defaultServiceAccountExists {
 		klog.V(2).Infof("'default' service account does not exist. Found following service accounts: %q", string(value))
-		//TODO: delete
-		klog.Error("containerRegistryProvider is disabled 2")
 		return false
 	}
 	url := metadataScopes + "?alt=json"
@@ -255,14 +251,10 @@ func (g *containerRegistryProvider) Enabled() bool {
 	for _, v := range scopes {
 		// cloudPlatformScope implies storage scope.
 		if strings.HasPrefix(v, storageScopePrefix) || strings.HasPrefix(v, cloudPlatformScopePrefix) {
-			//TODO: delete
-			klog.Error("containerRegistryProvider is enabled")
 			return true
 		}
 	}
 	klog.Warningf("Google container registry is disabled, no storage scope is available: %s", value)
-	//TODO: delete
-	klog.Error("containerRegistryProvider is disabled 3")
 	return false
 }
 
@@ -304,6 +296,5 @@ func (g *containerRegistryProvider) Provide(image string) credentialprovider.Doc
 	for _, k := range containerRegistryUrls {
 		cfg[k] = entry
 	}
-	klog.Errorf("cfg was returned: %v", cfg)
 	return cfg
 }
